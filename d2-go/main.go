@@ -37,8 +37,14 @@ LINELOOP:
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		maxGameCubeMap := map[string]int{
+			"red":   0,
+			"green": 0,
+			"blue":  0,
+		}
+
 		splitLine := strings.Split(line, ":")
-		gameIdStr := splitLine[0]
+		// gameIdStr := splitLine[0]
 
 		splitLine = strings.Split(splitLine[1], ";")
 		for _, roundStr := range splitLine {
@@ -54,22 +60,35 @@ LINELOOP:
 				}
 				color := pickParts[1]
 
-				// part 1 check
-				if count > MaxCubesMap[color] {
-					continue LINELOOP
+				if count > maxGameCubeMap[color] {
+					maxGameCubeMap[color] = count
 				}
+
+				// part 1 check
+				// if count > MaxCubesMap[color] {
+				// 	continue LINELOOP
+				// }
 			}
+
+			//
 		}
 
-		// todo parse game id
-		gameIdParts := strings.Split(gameIdStr, " ")
-		gameId, err := strconv.Atoi(gameIdParts[1])
-		if err != nil {
-			fmt.Println("Error parsing game id:", err)
-			continue
+		power := 1
+		for _, maxColorCount := range maxGameCubeMap {
+			power *= maxColorCount
 		}
 
-		sum += gameId
+		sum += power
+
+		// parse game id for part 1
+		// gameIdParts := strings.Split(gameIdStr, " ")
+		// gameId, err := strconv.Atoi(gameIdParts[1])
+		// if err != nil {
+		// 	fmt.Println("Error parsing game id:", err)
+		// 	continue
+		// }
+
+		// sum += gameId
 	}
 
 	fmt.Println("final sum: ", sum)
