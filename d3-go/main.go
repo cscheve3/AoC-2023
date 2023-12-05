@@ -4,10 +4,26 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 )
 
+// assumes str is length 1
+func isSymbol(str string) bool {
+	char := str[0]
+	return !((char == 46) || (char >= 48 && char <= 57) || (char >= 65 && char <= 90) || (char >= 97 && char <= 122))
+}
+
+func containsSymbol(str string) bool {
+	for _, char := range str {
+		if isSymbol(string(char)) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
-	fmt.Println("Hello, World!")
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -18,23 +34,67 @@ func main() {
 	// Create a scanner to read the file
 	scanner := bufio.NewScanner(file)
 
-	sum := 0
+	lines := make([]string, 0)
 	for scanner.Scan() {
-		// line := scanner.Text()
-		// parse everything into a list of strings (lines)
-
+		lines = append(lines, scanner.Text())
 	}
 
-	// for each line
-	//  find every number and its end and start index -> put [start end] pair into list [][2]int ? or something like that
-	// for each pair
-	//  is there a symbol before start or after end -> if yes great stop and add to sum
-	//  for the line above it is there a symbol between start-1 and end+1 -> if yes great stop and add to sum
-	//  for the line below it is there a symbol between start-1 and end+1 -> if yes great stop and add to sum
+	sum := 0
+	for lineIndex, line := range lines {
+		numberRegexp := regexp.MustCompile(`(\d+)`)
+		numberMatches := numberRegexp.FindAllStringIndex(line, -1)
+		// [pair is inclusive of start and exclusive of end]
 
-	// TODO min with length and max with 0 for ends and starts respectively
-	// TODO symbol is not number character and not '.'
-	// use regexs for things as can be for efficiency
+	PARTNUMBERLOOP:
+		for _, numberMatch := range numberMatches {
+			start := numberMatch[0] // inclusive
+			end := numberMatch[1]   // exclusive
+
+			partNumber, err := strconv.Atoi(line[start:end])
+			if err != nil {
+				fmt.Println("Error parsing part number:", err)
+				partNumber = 0
+			}
+
+			// todo issue - always true
+			if start > 0 && isSymbol(string(line[start-1])) {
+				sum += partNumber
+				continue
+			} else if end < len(line) && isSymbol(string(line[end])) {
+				sum += partNumber
+				continue
+			}
+
+			symbolRegexp := regexp.MustCompile(`[^0-9A-Za-z.]`)
+			if lineIndex > 0 {
+				symbolMatches := symbolRegexp.FindAllStringIndex(lines[lineIndex-1], -1)
+				// [pair is inclusive of start and exclusive of end]
+
+				for _, symbolMatch := range symbolMatches {
+					symbolStart := symbolMatch[0] // inclusive
+
+					if symbolStart >= start-1 && symbolStart <= end {
+						sum += partNumber
+						continue PARTNUMBERLOOP
+					}
+				}
+			}
+			if lineIndex < len(lines)-1 { // same function but for line below
+				symbolMatches := symbolRegexp.FindAllStringIndex(lines[lineIndex+1], -1)
+
+				for _, symbolMatch := range symbolMatches {
+					symbolStart := symbolMatch[0] // inclusive
+
+					if symbolStart >= start-1 && symbolStart <= end {
+						sum += partNumber
+						continue PARTNUMBERLOOP
+					}
+				}
+			}
+		}
+
+		// fmt.Println(string(line[numberMatches[0][0]]))
+	}
 
 	fmt.Println("final sum: ", sum)
 }
