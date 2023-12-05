@@ -1,3 +1,3 @@
-module day1
+module aoc
 
 go 1.21.4
