@@ -9,6 +9,18 @@ import (
 	"strings"
 )
 
+const (
+	MaxRedCubes   = 12
+	MaxGreenCubes = 13
+	MaxBlueCubes  = 14
+)
+
+var MaxCubesMap = map[string]int{
+	"red":   MaxRedCubes,
+	"green": MaxGreenCubes,
+	"blue":  MaxBlueCubes,
+}
+
 func main() {
 	file, err := os.Open("./input.txt")
 	if err != nil {
@@ -19,63 +31,45 @@ func main() {
 
 	// Create a scanner to read the file
 	scanner := bufio.NewScanner(file)
-
-	wordNumberMapping := map[string]string{
-		"one":   "1",
-		"two":   "2",
-		"three": "3",
-		"four":  "4",
-		"five":  "5",
-		"six":   "6",
-		"seven": "7",
-		"eight": "8",
-		"nine":  "9",
-	}
-
-	lineNumber := 1
 	sum := 0
+
+LINELOOP:
 	for scanner.Scan() {
 		line := scanner.Text()
-		regex := regexp.MustCompile(`(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)|\d`)
-		matches := regex.FindAllString(line, -1)
 
-		matchMap := make(map[string]string)
-		for _, match := range matches {
-			matchMap[match] = ""
-		}
+		splitLine := strings.Split(line, ":")
+		gameIdStr := splitLine[0]
 
-		// for every match, replace match in line with last char in the match
-		newLine := line
-		for match := range matchMap {
-			lastChar := match[len(match)-1:]
-			if lastChar == match {
-				lastChar = ""
+		splitLine = strings.Split(splitLine[1], ";")
+		for _, roundStr := range splitLine {
+			roundRegex := regexp.MustCompile(`(\d+) (red|green|blue)`)
+			roundPicks := roundRegex.FindAllString(roundStr, -1)
+
+			for _, pick := range roundPicks {
+				pickParts := strings.Split(pick, " ")
+				count, err := strconv.Atoi(pickParts[0])
+				if err != nil {
+					fmt.Println("Error parsing count:", err)
+					continue LINELOOP
+				}
+				color := pickParts[1]
+
+				// part 1 check
+				if count > MaxCubesMap[color] {
+					continue LINELOOP
+				}
 			}
-			newLine = strings.Replace(newLine, match, match+"_"+lastChar, -1)
-			// fmt.Println("line number ", lineNumber, " : ", newLine)
-		}
-		// fmt.Println("line number ", lineNumber, " : ", newLine)
-
-		matches = regex.FindAllString(newLine, -1)
-
-		firstNum := matches[0]
-		lastNum := matches[len(matches)-1]
-
-		if firstNumMapping, ok := wordNumberMapping[firstNum]; ok {
-			firstNum = firstNumMapping
 		}
 
-		if lastNumMapping, ok := wordNumberMapping[lastNum]; ok {
-			lastNum = lastNumMapping
+		// todo parse game id
+		gameIdParts := strings.Split(gameIdStr, " ")
+		gameId, err := strconv.Atoi(gameIdParts[1])
+		if err != nil {
+			fmt.Println("Error parsing game id:", err)
+			continue
 		}
 
-		num, err := strconv.Atoi(firstNum + lastNum)
-		if err == nil {
-			fmt.Println("line number ", lineNumber, " : ", matches, " = ", num)
-			sum += num
-		}
-
-		lineNumber++
+		sum += gameId
 	}
 
 	fmt.Println("final sum: ", sum)
