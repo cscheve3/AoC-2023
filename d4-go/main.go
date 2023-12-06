@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func getLineScore(line string) float64 {
+func getLineScore(line string) int {
 	splitLine := strings.Split(line, ":")
 	// gameIdStr := splitLine[0]
 
@@ -23,7 +23,7 @@ func getLineScore(line string) float64 {
 		}
 	}
 
-	winningCount := 0.0
+	winningCount := 0
 	// winnerMatches := make([]string, 0)
 	for _, number := range playingNumbers {
 		if number == "" {
@@ -39,7 +39,7 @@ func getLineScore(line string) float64 {
 	return winningCount
 }
 
-func main() {
+func mainp1() {
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -66,7 +66,7 @@ func main() {
 	fmt.Println("final sum:", sum)
 }
 
-func mainp2() {
+func main() {
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -77,18 +77,26 @@ func mainp2() {
 	// Create a scanner to read the file
 	scanner := bufio.NewScanner(file)
 
-	scores := make([]float64, 0)
-	sum := 0.0
+	scores := make([]int, 0)
+	cardInstances := make([]int, 0)
+	sum := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		scores = append(scores, getLineScore(line))
-
+		cardInstances = append(cardInstances, 1)
 	}
 
-	// for lineIndex, line := range lines {
+	for card, score := range scores {
+		instances := cardInstances[card]
+		for i := 1; i <= score; i++ {
+			cardInstances[card+i] += instances
+		}
 
-	// }
+		sum += instances
+	}
+
+	// fmt.Println("final instances:", cardInstances)
 
 	fmt.Println("final sum:", sum)
 }
